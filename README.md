@@ -1,6 +1,15 @@
 # Gemma 4 E2B Japanese LoRA Fine-tuning（破滅的忘却対策版）
 
 <p align="center">
+  <a href="https://colab.research.google.com/github/CloudP0nd/gemma4-e2b-ja-lora-finetune/blob/main/Gemma4-E2B_JA_LoRA_FineTuning.ipynb" target="_blank">
+    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+  </a>
+  <a href="https://github.com/CloudP0nd/gemma4-e2b-ja-lora-finetune/blob/main/Gemma4-E2B_JA_LoRA_FineTuning.ipynb">
+    <img src="https://img.shields.io/badge/View-Notebook-1f6feb?logo=github" alt="View Notebook"/>
+  </a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Model-unsloth/gemma--4--E2B--it-blue" alt="Model">
   <img src="https://img.shields.io/badge/Framework-Unsloth-green" alt="Framework">
   <img src="https://img.shields.io/badge/API-FastModel-teal" alt="API">
@@ -101,7 +110,15 @@ Unsloth の `standardize_data_formats` で `conversations` 形式に正規化し
 
 ### 1. Colab でノートブックを開く
 
-[`Gemma4-E2B_JA_LoRA_FineTuning.ipynb`](./Gemma4-E2B_JA_LoRA_FineTuning.ipynb) をダウンロードし、[Google Colab](https://colab.research.google.com/) にアップロードします。
+👇 **以下のボタンをクリックするだけで、Colab で直接開けます**（ダウンロード不要）。
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/CloudP0nd/gemma4-e2b-ja-lora-finetune/blob/main/Gemma4-E2B_JA_LoRA_FineTuning.ipynb" target="_blank">
+    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+  </a>
+</p>
+
+または [ノートブックを直接表示](./Gemma4-E2B_JA_LoRA_FineTuning.ipynb) してから Colab で開いても構いません。
 
 ### 2. HuggingFace トークンの準備
 
@@ -114,7 +131,7 @@ Gemma 4 は gated model のため、事前に以下を行ってください：
 
 ### 3. GPU ランタイムを選択
 
-`ランタイム > ランタイムのタイプを変更 > T4 GPU`（以上推奨）。FP16 LoRA のため T4 (16GB) で動作しますが、A100/L4 ならより高速です。
+`ランタイム > ランタイムのタイプを変更 > T4 GPU`（以上推奨）。QLoRA 採用により T4 (16GB) で快適に動作します。A100/L4 ならより高速です。
 
 ### 4. 上から順に実行
 
