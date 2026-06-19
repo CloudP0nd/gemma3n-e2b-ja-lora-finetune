@@ -50,21 +50,23 @@ Gemma 4 E2B は多言語（140+ 言語）対応を謳っていますが、日本
 
 ## 🛡️ 破滅的忘却への対策
 
-日本語データだけでファインチューニングすると、英語能力や推論能力が急激に劣化する「破滅的忘却」が起こり得ます。本ノートブックでは以下の **11 の施策** を組み合わせてこれを防ぎます：
+日本語データだけでファインチューニングすると、英語能力や推論能力が急激に劣化する「破滅的忘却」が起こり得ます。本ノートブックでは以下の **13 の施策** を組み合わせてこれを防ぎます：
 
 | # | 施策 | 内容 | 効果 |
 |---|------|------|------|
 | 1 | **QLoRA（4bit NF4 量子化 + LoRA）** | ベース重みを4bitで読み込み、rank=16 / alpha=32 のアダプタのみ学習 | 元重みを凍結し最小限の差分更新。VRAM 削減で T4 でも動作 |
-| 2 | **attention + MLP 両方へ適用** | `finetune_attention_modules=True`, `finetune_mlp_modules=True` | 適応範囲を確保しつつ、フリーズ部分で知識保持 |
-| 3 | **視覚層はフリーズ** | `finetune_vision_layers=False` | マルチモーダル能力の保持 |
-| 4 | **学習率 2e-4** | LoRA 標準的な中庸な値 | 過度な重み更新を回避 |
-| 5 | **エポック数 2** | 多すぎず少なすぎず | 過学習による能力崩壊を防止 |
-| 6 | **Cosine LR Schedule** | 学習率をコサインカーブで漸減 | 学習終盤の急激な更新を防止 |
-| 7 | **Warmup (5%)** | 最初の 5% ステップは線形増加 | 学習初期の不安定性を抑制 |
-| 8 | **Weight Decay (0.01)** | L2 正則化を適用 | 過学習・過度な適応を抑制 |
-| 9 | **LoRA Dropout (0.05)** | アダプタに入れるドロップアウト | アダプタの過適合を防止 |
-| 10 | **`train_on_responses_only`** | ユーザー発言部分をマスク | 応答部分のみ学習し、入力模倣を防止 |
-| 11 | **学習前後の PPL 評価** | 日本語/英語の Perplexity を比較 | 忘却を定量モニタリング |
+| 2 | **`text_only=True` でテキスト塔のみロード** | vision/audio 塔をスキップ | ロード対象を最小化し、マルチモーダル知識への干渉を排除 |
+| 3 | **attention + MLP 両方へ適用** | `finetune_attention_modules=True`, `finetune_mlp_modules=True` | 適応範囲を確保しつつ、フリーズ部分で知識保持 |
+| 4 | **視覚層はフリーズ** | `finetune_vision_layers=False` | マルチモーダル能力の保持 |
+| 5 | **学習率 2e-4** | LoRA 標準的な中庸な値 | 過度な重み更新を回避 |
+| 6 | **エポック数 2** | 多すぎず少なすぎず | 過学習による能力崩壊を防止 |
+| 7 | **Cosine LR Schedule** | 学習率をコサインカーブで漸減 | 学習終盤の急激な更新を防止 |
+| 8 | **Warmup (5%)** | 最初の 5% ステップは線形増加 | 学習初期の不安定性を抑制 |
+| 9 | **Weight Decay (0.01)** | L2 正則化を適用 | 過学習・過度な適応を抑制 |
+| 10 | **LoRA Dropout (0.05)** | アダプタに入れるドロップアウト | アダプタの過適合を防止 |
+| 11 | **`packing=False`** | サンプルをパッキングせず文境界を保持 | `train_on_responses_only` のマスク境界が正確に維持される |
+| 12 | **`train_on_responses_only`** | ユーザー発言部分をマスク | 応答部分のみ学習し、入力模倣を防止 |
+| 13 | **学習前後の PPL 評価** | 日本語/英語の Perplexity を比較 | 忘却を定量モニタリング |
 
 ---
 
@@ -75,6 +77,7 @@ Gemma 4 E2B は多言語（140+ 言語）対応を謳っていますが、日本
 | 対象モデル | `unsloth/gemma-4-E2B-it` |
 | API | `FastModel`（マルチモーダル対応） |
 | Precision | **4bit NF4 量子化**（`load_in_4bit=True`） |
+| ロード対象 | **テキスト層のみ**（`text_only=True`・vision/audio 塔はスキップ） |
 | LoRA Rank | 16 |
 | LoRA Alpha | 32 |
 | LoRA Dropout | 0.05 |
@@ -87,6 +90,7 @@ Gemma 4 E2B は多言語（140+ 言語）対応を謳っていますが、日本
 | Weight Decay | 0.01 |
 | Epochs | 2 |
 | Max Sequence Length | 2048 |
+| Packing | `False`（文境界を保持・`train_on_responses_only` と整合） |
 | Chat Template | `gemma-4`（`<\|turn\|>user` / `<\|turn\|>model` 形式） |
 | 推論パラメータ | `temperature=1.0, top_p=0.95, top_k=64`（Gemma 4 公式推奨） |
 
@@ -128,6 +132,10 @@ Gemma 4 は gated model のため、事前に以下を行ってください：
 2. [unsloth/gemma-4-E2B-it](https://huggingface.co/unsloth/gemma-4-E2B-it) のライセンス同意
 3. [Access Token](https://huggingface.co/settings/tokens) を発行（read 権限）
 4. Colab の **Secrets** に `HF_TOKEN` として登録
+   - Colab 左側の 🔑 アイコン → "Add new secret" → 名前: `HF_TOKEN`、値: トークン文字列
+   - "Notebook access" トグルを ON にする
+
+> 💡 ノートブックの Step 2 は `google.colab.userdata.get("HF_TOKEN")` で Colab Secrets から自動取得します。環境変数 `HF_TOKEN` が設定されている場合はそちらをフォールバックします。
 
 ### 3. GPU ランタイムを選択
 
